@@ -1,0 +1,110 @@
+---
+title: "Yoga_and_TNFalpha"
+author: "Name"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output: html_document
+---
+```{r, setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo=TRUE
+)
+```
+
+### Package Set-up  
+Load Required packages for program  
+```{r}
+library(dplyr)
+library(ggplot2)
+library(broom)
+```
+<!--
+TO DO LIST:
+	1. Read in demographic information, engagement and TNFalpha - DONE
+	2. Get average Pre and Post TNFalpha - DONE
+	3. Get change in Pre and Post TNFalpha - DONE
+	4. Get change in Pre and Post engagement - DONE
+	5. Merge Data - DONE
+	6. Remove drop outs and decliners - DONE
+	7. Run Linear regression TNFalpha_change ~ engage_change*group - DONE
+	8. Make table of regression results - DONE
+	9. Make ggplot2 graph of the regression - INCOMPLETE
+-->
+  
+### Step 1: Read in data  
+Note: We have three datasets - demographic info, engagement, and TNFalpha  
+For this assignment, will be focusing on engagement and TNFalpha but using demographic information to identify drop outs and decliners that need to be removed  
+
+```{r, get_data}
+demo <- read.csv('Demographics.csv')
+engage <- read.csv('Engage.csv')
+TNF <- read.csv('TNFalpha.csv')
+```
+
+### Step 2: Edit TNFalpha data  
+We want the average of the two PRE tests and the average of the two POST tests and then a change variable for each person that is POST-PRE  
+
+```{r, TNF.edit}
+#Get average for Pre and Post
+TNF.edit <-
+	TNF %>%
+		group_by(ID) %>%
+		summarise(avg_PRE_TNF = mean(TNFa_A05_pre), avg_POST_TNF = mean(TNFa_A05_post))
+#Get change variable
+TNF.edit <-
+	TNF.edit %>%
+		mutate(change_TNF = avg_POST_TNF - avg_PRE_TNF)
+```
+
+  
+### Step 3: Clean Demo Data  
+Only want Group, ID, Drop_out and Decline  
+
+```{r, Demo.edit}
+#Only keep certain variables  
+Demo.edit <-
+	demo %>%
+		select(ID,group,Drop_out,Decline)
+```
+### Step 4: Edit Engagement Data  
+Get Change in engagement = Post engagement - Pre engagement  
+
+```{r, Engage.edit}
+Engage.edit <- 
+	engage %>%
+		mutate(change_engage = Post_engage - Pre_engage) %>%
+		select(-Group)
+```
+
+### Step 5: Merge Data and Remove Drop Outs and Decliners  
+
+```{r, Merge_data}
+Full_data <-
+	merge(Demo.edit,TNF.edit, by="ID")
+Full_data <-
+	merge(Full_data,Engage.edit,by="ID")
+Full_data <- Full_data[Full_data$Drop_out != 1,]
+Full_data <- Full_data[Full_data$Decline != 1,]
+```
+
+### Step 6: Run Regression, Build Table  
+Looking for the effect of engagement on TNF alpha  
+```{r, Table1}
+model <- lm(change_TNF ~ change_engage*group, data=Full_data) 
+model %>%
+  tidy() %>%
+  mutate(
+    p.value = scales::pvalue(p.value),
+   term = c("Intercept", "Change in Engagement", "Group B", "Group C", "Interaction with Group B", "Interaction with Group A")
+  ) %>%
+  knitr::kable(
+  	caption = "Linear Regression of Change in TNF alpha on Change in Engagement by Group",
+    col.names = c("Predictor", "B", "SE", "t", "p"),
+    digits = c(0, 2, 3, 2, 3),
+    align = c("l", "r", "r", "r", "r"))
+```
+  
+Only the intercept is significant at the alpha = 0.05 level and so we conclude that the groups have different changes in TNF alpha, but the affect of engagement on TNF alpha is insignificant.  
+
+### Step 7: Make Graph of Regression  
+
+
