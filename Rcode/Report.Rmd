@@ -3,6 +3,33 @@ title: "Analysis Report"
 output: html_document
 ---
 
-```{r, loadpack}
-source("Rcode/LoadPackages.R")
+
+```{r, setup,message=FALSE,echo=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+source("LoadPackages.R")
 ```
+### This is an analysis of the association between Change in Engagement and Change in TNF Alpha.  
+
+Figure 1. Graph of Change in Engagement vs. Change in TNF alpha  
+
+![](../figs/fig1.png)
+  
+Regression Table for TNF alpha on Engagement, stratified by change  
+
+```{r}
+Full_data <- read.csv("../clean_data/Full_data")
+model <- lm(change_TNF ~ change_engage*group, data=Full_data) 
+model %>%
+  tidy() %>%
+  mutate(
+    p.value = scales::pvalue(p.value),
+   term = c("Intercept", "Change in Engagement", "Group B", "Group C", "Interaction with Group B", "Interaction with Group A")
+  ) %>%
+  knitr::kable(
+  	caption = "Linear Regression of Change in TNF alpha on Change in Engagement by Group",
+    col.names = c("Predictor", "B", "SE", "t", "p"),
+    digits = c(0, 2, 3, 2, 3),
+    align = c("l", "r", "r", "r", "r"))
+```
+  
+Only the intercept is significant at the alpha = 0.05 level and so we conclude that the groups have different changes in TNF alpha, but the affect of engagement on TNF alpha is insignificant.  
