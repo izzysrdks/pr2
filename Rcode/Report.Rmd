@@ -17,7 +17,7 @@ Figure 1. Graph of Change in Engagement vs. Change in TNF alpha
 Regression Table for TNF alpha on Engagement, stratified by change  
 
 ```{r}
-Full_data <- read.csv("../clean_data/Full_data")
+Full_data <- read.csv("../clean_data/Full_data.csv")
 model <- lm(change_TNF ~ change_engage*group, data=Full_data) 
 model %>%
   tidy() %>%
