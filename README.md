@@ -11,7 +11,7 @@
 
 # Execute the code  
 
-To execute the code you can run the following code from the command line while in the working directory with the datasets and the code.  
+To execute the code you can run `make` from the command line while in the working directory with the datasets and the code.  
 
 
-This will create a file in the folder with the code called `Code.html` containing the results.
+This will create a file in the folder with the code called `Report.html` containing the results.
